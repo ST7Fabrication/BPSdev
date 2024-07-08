@@ -1,0 +1,86 @@
+#include <Wire.h>
+#include <TFT_eSPI.h>
+#include "Longan_I2C_CAN_Arduino.h"
+
+#define MCP2515_I2C_ADDR 0x25
+#define MCP_16MHz_500kBPS 1
+
+TFT_eSPI tft = TFT_eSPI();
+I2C_CAN can(0x25);
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Initializing TFT Display and CAN-Bus...");
+
+  tft.init();
+  tft.setRotation(1);
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextSize(2);
+  tft.setCursor(0, 0);
+  tft.println("Hello, ESP32!");
+
+  Wire.begin(12, 13); // Adjust pins according to your setup
+  Serial.println("I2C initialized.");
+
+  byte result = can.begin(MCP_16MHz_500kBPS);
+
+  if (result == CAN_OK) {
+    Serial.println("CAN-Bus initialized.");
+  } else {
+    Serial.print("Error initializing CAN-Bus. Error code: ");
+    Serial.println(result);
+  }
+}
+
+void loop() {
+  // Check if a CAN message is available
+  byte len = 0;
+  byte buf[8];
+
+  if (can.checkReceive() == CAN_MSGAVAIL) {
+    can.readMsgBuf(&len, buf);
+    
+    // Display CAN message on TFT
+    tft.fillScreen(TFT_BLACK); // Clear screen
+    tft.setCursor(0, 0);
+    tft.print("CAN Message Received:");
+    tft.setCursor(0, 20);
+    tft.print("ID: 0x");
+    tft.print(can.getCanId(), HEX);
+    tft.setCursor(0, 40);
+    tft.print("Length: ");
+    tft.println(len);
+    tft.setCursor(0, 60);
+    tft.print("Data: ");
+    for (int i = 0; i < len; i++) {
+      tft.print(buf[i], HEX);
+      tft.print(" ");
+
+
+      // Display CAN message on Serial Monitor
+Serial.println("CAN Message Received:");
+Serial.print("ID: 0x");
+Serial.println(can.getCanId(), HEX);
+Serial.print("Length: ");
+Serial.println(len);
+Serial.print("Data: ");
+for (int i = 0; i < len; i++) {
+  Serial.print(buf[i], HEX);
+  Serial.print(" ");
+}
+Serial.println(); // Print a newline for better readability
+
+
+    }
+  } else {
+    tft.fillScreen(TFT_BLACK); // Clear screen if no message received
+    tft.setCursor(0, 0);
+    tft.println("No CAN message available.");
+    Serial.print("No CAN message available");
+    
+  }
+  Serial.println(); // Print a newline for better readability
+
+  delay(1000); // Adjust delay as needed
+}
