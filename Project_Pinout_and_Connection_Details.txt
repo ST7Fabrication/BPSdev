@@ -1,3 +1,11 @@
+-Download BPS_status_thingy.zip
+-Unpack to the Arduino IDE folder
+-Upload code to devices
+-Wire devices accordingly
+-Profit
+
+
+
 
 Project Pinout and Connection Details
 
